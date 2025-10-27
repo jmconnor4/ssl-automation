@@ -26,7 +26,12 @@ jobs:
 
       - name: Install app dependencies
         working-directory: ./app
-        run: npm ci
+        run: |
+          if [ -f "package.json" ]; then
+            npm ci
+          else
+            echo "No app/package.json found, skipping app dependencies"
+          fi
 
       - name: Run unit tests
         run: npm run test:unit
@@ -82,15 +87,22 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./app
-        run: npm ci
+        run: |
+          if [ -f "package.json" ]; then
+            npm ci
+          else
+            echo "No app/package.json found, skipping dependencies"
+          fi
 
       - name: Run ESLint (if configured)
         working-directory: ./app
         run: |
-          if [ -f ".eslintrc.js" ] || [ -f ".eslintrc.json" ] || [ -f "package.json" ]; then
+          if [ -f "package.json" ]; then
             if npm run lint --if-present; then
               echo "Linting passed or no lint script found"
             fi
+          else
+            echo "No app/package.json found, skipping lint"
           fi
         continue-on-error: true
 
