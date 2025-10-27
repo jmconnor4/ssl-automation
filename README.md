@@ -59,6 +59,54 @@ docker-compose up --build -d
 scp -r -i yourkeyname.pem ~/path/to/your/project/folder/from/root ec2-user@<ec2-IPv4-publicIp>:~/
 
 ```
-* make sure the path to your pem file is accurate. 
+* make sure the path to your pem file is accurate.
 * make sure to add in your public ip
 * This step will securely copy the contents of your project over to the ec2 shell.
+
+## Development
+
+### Running Tests
+
+Tests are located in the `tests/` directory at the project root level. The test suite includes:
+- **28 unit tests** for the Node.js application (Jest)
+- **129 bash tests** for the automation scripts (BATS)
+
+```bash
+# Run all tests (unit + bash)
+npm test
+
+# Run only unit tests
+npm run test:unit
+
+# Run only bash script tests
+npm run test:bash
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests for CI (with coverage)
+npm run test:ci
+```
+
+See `tests/README.md` for detailed test documentation.
+
+### Project Structure
+
+```
+ssl-automation/
+├── app/                    # Node.js application
+│   ├── server.js          # Express server
+│   ├── package.json       # App dependencies
+│   └── Dockerfile         # Container build instructions
+├── tests/                 # Test files
+│   ├── server.test.js     # Server endpoint tests
+│   └── server.startup.test.js  # Server module tests
+├── data/
+│   └── nginx/             # Nginx configuration
+├── .github/
+│   └── workflows/         # CI/CD workflows
+├── jest.config.js         # Jest test configuration
+├── package.json           # Root dependencies and test scripts
+├── setup-agent.sh         # Local setup automation
+└── deploy-to-ec2.sh       # EC2 deployment automation
+```

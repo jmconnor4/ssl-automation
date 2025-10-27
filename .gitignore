@@ -1,0 +1,39 @@
+# Node modules
+node_modules/
+app/node_modules/
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# EC2 deployment configuration (contains sensitive info)
+.ec2-deploy-config
+
+# Let's Encrypt files (generated)
+init-letsencrypt.sh
+data/certbot/conf/*
+data/certbot/www/*
+
+# Nginx backup files
+*.backup
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Coverage reports
+coverage/
+*.lcov
+
+# Package lock files
+package-lock.json

@@ -1,0 +1,33 @@
+{
+  "name": "ssl-automation",
+  "version": "1.0.0",
+  "description": "SSL automation for deploying and securing single-server Node.js applications",
+  "scripts": {
+    "test": "npm run test:unit && npm run test:bash",
+    "test:unit": "jest --coverage",
+    "test:bash": "bats tests/*.bats",
+    "test:watch": "jest --watch",
+    "test:ci": "jest --coverage --ci && bats tests/*.bats",
+    "start": "cd app && npm start",
+    "dev": "cd app && npm run dev"
+  },
+  "keywords": [
+    "ssl",
+    "docker",
+    "nginx",
+    "letsencrypt",
+    "automation"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "bats": "^1.11.1",
+    "bats-assert": "^2.1.0",
+    "bats-support": "^0.3.0",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
