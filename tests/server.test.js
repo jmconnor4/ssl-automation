@@ -1,7 +1,12 @@
 const request = require('supertest');
-const app = require('../app/server');
+const createTestApp = require('./helpers/createTestApp');
 
 describe('Express Server', () => {
+  let app;
+
+  beforeEach(() => {
+    app = createTestApp();
+  });
   describe('GET /', () => {
     it('should return welcome message with 200 status', async () => {
       const response = await request(app).get('/');

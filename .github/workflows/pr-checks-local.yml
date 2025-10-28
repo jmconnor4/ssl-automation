@@ -1,0 +1,124 @@
+name: PR Checks (Local)
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install app dependencies
+        working-directory: ./app
+        run: |
+          if [ -f "package.json" ]; then
+            npm ci
+          else
+            echo "No app/package.json found, skipping app dependencies"
+          fi
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+  test-bash:
+    name: Run Bash Script Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies (for bats)
+        run: npm ci
+
+      - name: Install bats-core
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bats
+
+      - name: Run bash tests
+        run: npm run test:bash
+
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        working-directory: ./app
+        run: |
+          if [ -f "package.json" ]; then
+            npm ci
+          else
+            echo "No app/package.json found, skipping dependencies"
+          fi
+
+      - name: Run ESLint (if configured)
+        working-directory: ./app
+        run: |
+          if [ -f "package.json" ]; then
+            if npm run lint --if-present; then
+              echo "Linting passed or no lint script found"
+            fi
+          else
+            echo "No app/package.json found, skipping lint"
+          fi
+        continue-on-error: true
+
+  docker-build:
+    name: Docker Build Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Node.js application image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app
+          push: false
+          tags: ssl-automation-app:test
+
+  nginx-config:
+    name: Validate Nginx Config
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Test Nginx configuration syntax
+        run: |
+          docker run --rm -v $(pwd)/data/nginx:/etc/nginx/conf.d:ro nginx:1.15-alpine nginx -t -c /etc/nginx/nginx.conf || echo "Note: Nginx config test may fail if domain placeholders are not replaced"

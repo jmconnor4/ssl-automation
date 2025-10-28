@@ -22,11 +22,16 @@ jobs:
           cache: 'npm'
 
       - name: Install root dependencies
-        run: npm ci
+        run: npm install
 
       - name: Install app dependencies
         working-directory: ./app
-        run: npm ci
+        run: |
+          if [ -f "package.json" ]; then
+            npm ci
+          else
+            echo "No app/package.json found, skipping app dependencies"
+          fi
 
       - name: Run unit tests
         run: npm run test:unit
@@ -82,15 +87,22 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./app
-        run: npm ci
+        run: |
+          if [ -f "package.json" ]; then
+            npm ci
+          else
+            echo "No app/package.json found, skipping dependencies"
+          fi
 
       - name: Run ESLint (if configured)
         working-directory: ./app
         run: |
-          if [ -f ".eslintrc.js" ] || [ -f ".eslintrc.json" ] || [ -f "package.json" ]; then
+          if [ -f "package.json" ]; then
             if npm run lint --if-present; then
               echo "Linting passed or no lint script found"
             fi
+          else
+            echo "No app/package.json found, skipping lint"
           fi
         continue-on-error: true
 
@@ -151,3 +163,68 @@ jobs:
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
+
+  app-server-test:
+    name: Test App Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: app/package.json
+
+      - name: Install app dependencies
+        working-directory: ./app
+        run: npm ci
+
+      - name: Start app server in background
+        working-directory: ./app
+        run: |
+          node server.js &
+          echo $! > server.pid
+          sleep 2
+
+      - name: Wait for server to be ready
+        run: |
+          timeout 30 bash -c 'until curl -sf http://localhost:3000/health; do sleep 1; done'
+          echo "Server is ready!"
+
+      - name: Test server endpoints
+        run: |
+          echo "Testing health endpoint..."
+          curl -f http://localhost:3000/health | jq .
+
+          echo "Testing root endpoint..."
+          curl -f http://localhost:3000/ | jq .
+
+          echo "Testing info endpoint..."
+          curl -f http://localhost:3000/api/info | jq .
+
+          echo "Testing echo endpoint..."
+          curl -f -X POST http://localhost:3000/api/echo \
+            -H "Content-Type: application/json" \
+            -d '{"message":"GitHub Actions test"}' | jq .
+
+          echo "Testing 404 handler..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/nonexistent)
+          if [ "$STATUS" = "404" ]; then
+            echo "404 test passed (received status $STATUS)"
+          else
+            echo "404 test failed (received status $STATUS)"
+            exit 1
+          fi
+
+      - name: Stop app server
+        if: always()
+        working-directory: ./app
+        run: |
+          if [ -f server.pid ]; then
+            kill $(cat server.pid) || true
+            rm server.pid
+          fi

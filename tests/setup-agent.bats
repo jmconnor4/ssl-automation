@@ -10,6 +10,7 @@ setup() {
 
     # Source the script functions (but don't run main)
     export TEST_MODE=1
+    source ./setup-agent.sh
 
     # Create temp directory for test files
     export TEST_DIR="$(mktemp -d)"
@@ -27,36 +28,26 @@ teardown() {
     cd "$ORIGINAL_DIR" || true
 }
 
-# Helper function to source script functions
-source_script() {
-    # Source only the functions, not the main execution
-    source ./setup-agent.sh 2>/dev/null || true
-}
-
 # Test: Logging functions exist and output correctly
 @test "log_info outputs blue INFO message" {
-    source_script
     run log_info "Test message"
     assert_output --partial "[INFO]"
     assert_output --partial "Test message"
 }
 
 @test "log_success outputs green SUCCESS message" {
-    source_script
     run log_success "Test success"
     assert_output --partial "[SUCCESS]"
     assert_output --partial "Test success"
 }
 
 @test "log_warning outputs yellow WARNING message" {
-    source_script
     run log_warning "Test warning"
     assert_output --partial "[WARNING]"
     assert_output --partial "Test warning"
 }
 
 @test "log_error outputs red ERROR message" {
-    source_script
     run log_error "Test error"
     assert_output --partial "[ERROR]"
     assert_output --partial "Test error"
@@ -65,7 +56,6 @@ source_script() {
 # Test: Check app folder validation
 @test "check_app_folder fails when app directory missing" {
     cd "$TEST_DIR"
-    source_script
 
     run check_app_folder
     assert_failure
@@ -75,7 +65,6 @@ source_script() {
 @test "check_app_folder fails when package.json missing" {
     cd "$TEST_DIR"
     mkdir -p app
-    source_script
 
     run check_app_folder
     assert_failure
@@ -86,7 +75,6 @@ source_script() {
     cd "$TEST_DIR"
     mkdir -p app
     echo '{"name": "test"}' > app/package.json
-    source_script
 
     run check_app_folder
     assert_failure
@@ -98,7 +86,6 @@ source_script() {
     mkdir -p app
     echo '{"name": "test", "scripts": {"start": "node server.js"}}' > app/package.json
     echo 'FROM node:18' > app/Dockerfile
-    source_script
 
     run check_app_folder
     assert_success
@@ -110,7 +97,6 @@ source_script() {
     mkdir -p app
     echo '{"name": "test"}' > app/package.json
     echo 'FROM node:18' > app/Dockerfile
-    source_script
 
     run check_app_folder
     assert_output --partial "No 'start' script found"
@@ -121,7 +107,6 @@ source_script() {
     cd "$TEST_DIR"
     mkdir -p data/nginx
     echo 'server_name <domain>;' > data/nginx/app.conf
-    source_script
 
     # Mock user input
     echo "example.com" | run configure_domain 2>/dev/null || true
@@ -134,7 +119,6 @@ source_script() {
 
 @test "configure_domain fails when nginx config missing" {
     cd "$TEST_DIR"
-    source_script
 
     run configure_domain
     assert_failure
@@ -145,7 +129,6 @@ source_script() {
     cd "$TEST_DIR"
     mkdir -p data/nginx
     echo 'server_name example.com;' > data/nginx/app.conf
-    source_script
 
     run configure_domain
     assert_success

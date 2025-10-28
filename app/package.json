@@ -1,0 +1,23 @@
+{
+  "name": "ssl-automation-app",
+  "version": "1.0.0",
+  "description": "Test Node.js application for SSL automation",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "ssl",
+    "node",
+    "express"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

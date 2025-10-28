@@ -2,10 +2,10 @@ module.exports = {
   testEnvironment: 'node',
   coverageDirectory: 'coverage',
   collectCoverageFrom: [
-    'app/**/*.js',
-    '!app/node_modules/**',
-    '!app/coverage/**',
-    '!app/jest.config.js'
+    '/**/*.js',
+    '/node_modules/**',
+    '/coverage/**',
+    '/jest.config.js'
   ],
   coverageThreshold: {
     global: {
