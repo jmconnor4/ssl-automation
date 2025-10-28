@@ -24,6 +24,7 @@
     "bats": "^1.11.1",
     "bats-assert": "^2.1.0",
     "bats-support": "^0.3.0",
+    "express": "^5.1.0",
     "jest": "^29.7.0",
     "supertest": "^6.3.3"
   },
