@@ -37,3 +37,6 @@ coverage/
 
 # Package lock files
 package-lock.json
+
+# local testing files
+.github/workflows/pr-checks-local.yml
