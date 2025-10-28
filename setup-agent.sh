@@ -3,7 +3,10 @@
 # SSL Automation Setup Agent
 # Automates the steps from README.md for easy deployment
 
-set -e
+# Only set -e if not in test mode (exit on error)
+if [ -z "$TEST_MODE" ]; then
+    set -e
+fi
 
 # Colors for output
 RED='\033[0;31m'
@@ -33,7 +36,7 @@ log_error() {
 check_sudo() {
     if [ "$EUID" -ne 0 ] && [ "$1" == "required" ]; then
         log_error "This script must be run with sudo"
-        exit 1
+        [ -n "$TEST_MODE" ] && return 1 || exit 1
     fi
 }
 
@@ -53,7 +56,7 @@ check_docker_installation() {
             log_success "Docker installed successfully"
         else
             log_error "Docker is required. Please install it manually."
-            exit 1
+            [ -n "$TEST_MODE" ] && return 1 || exit 1
         fi
     else
         log_success "Docker is already installed ($(docker --version))"
@@ -69,7 +72,7 @@ check_docker_installation() {
             log_success "docker-compose installed successfully"
         else
             log_error "docker-compose is required. Please install it manually."
-            exit 1
+            [ -n "$TEST_MODE" ] && return 1 || exit 1
         fi
     else
         log_success "docker-compose is already installed"
@@ -82,17 +85,17 @@ check_app_folder() {
 
     if [ ! -d "app" ]; then
         log_error "app/ folder not found!"
-        exit 1
+        [ -n "$TEST_MODE" ] && return 1 || exit 1
     fi
 
     if [ ! -f "app/package.json" ]; then
         log_warning "app/package.json not found"
-        exit 1
+        [ -n "$TEST_MODE" ] && return 1 || exit 1
     fi
 
     if [ ! -f "app/Dockerfile" ]; then
         log_error "app/Dockerfile not found"
-        exit 1
+        [ -n "$TEST_MODE" ] && return 1 || exit 1
     fi
 
     # Check if npm start is configured
@@ -111,7 +114,7 @@ configure_domain() {
 
     if [ ! -f "data/nginx/app.conf" ]; then
         log_error "data/nginx/app.conf not found!"
-        exit 1
+        [ -n "$TEST_MODE" ] && return 1 || exit 1
     fi
 
     # Check if <domain> placeholder exists
@@ -121,7 +124,7 @@ configure_domain() {
         # Validate input
         if [ -z "$domain" ]; then
             log_error "Domain cannot be empty"
-            exit 1
+            [ -n "$TEST_MODE" ] && return 1 || exit 1
         fi
 
         log_info "Replacing <domain> with $domain in nginx config..."
@@ -169,7 +172,7 @@ run_certificate_generation() {
 
     if [ ! -f "init-letsencrypt.sh" ]; then
         log_error "init-letsencrypt.sh not found! Run step 4 first."
-        exit 1
+        [ -n "$TEST_MODE" ] && return 1 || exit 1
     fi
 
     # Check staging status
@@ -210,7 +213,7 @@ run_certificate_generation() {
         fi
     else
         log_error "Certificate generation failed!"
-        exit 1
+        [ -n "$TEST_MODE" ] && return 1 || exit 1
     fi
 }
 
@@ -239,7 +242,7 @@ start_containers() {
         log_info "  - Restart: docker-compose restart"
     else
         log_error "Failed to start containers"
-        exit 1
+        [ -n "$TEST_MODE" ] && return 1 || exit 1
     fi
 }
 
@@ -342,5 +345,7 @@ main() {
     done
 }
 
-# Run main function
-main "$@"
+# Run main function (skip if in test mode)
+if [ -z "$TEST_MODE" ]; then
+    main "$@"
+fi
